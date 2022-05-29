@@ -407,12 +407,12 @@ class PAD(gym.Env):
         all_combos = []
         # Repeat the combo detection until nothing more can be canceled.
         while True:
-            if verbose is True:
+            if verbose == True:
                 print('Board before combo canceling:')
                 self.render(board)
 
             combos = pad_utils.cancel(board)
-            if verbose is True:
+            if verbose == True:
                 print('Board after combo canceling:')
                 self.render(board)
 
@@ -422,21 +422,21 @@ class PAD(gym.Env):
 
             # Add combo to combo list and skyfall.
             all_combos += combos
-            if skyfall_damage is False:
+            if skyfall_damage == False:
                 break
 
             board = self.drop(board=board)
-            if verbose is True:
+            if verbose == True:
                 print('Board after orb drop:')
                 self.render(board)
             board = self.fill_board(board=board)
-            if verbose is True:
+            if verbose == True:
                 print('Board after fill board:')
                 self.render(board)
 
         # Reward is the total damage calculated based on combos.
         reward = self.damage(all_combos)
-        if verbose is True:
+        if verbose == True:
             print(all_combos)
             print('The total damange is:', reward)
 
