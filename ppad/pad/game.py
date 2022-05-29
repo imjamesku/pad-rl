@@ -25,8 +25,10 @@ import ppad.pad.parameters as parameters
 import ppad.pad.player as player
 import ppad.pad.utils as pad_utils
 
+import gym
 
-class PAD:
+
+class PAD(gym.Env):
     """
     Board orientation:
                col
@@ -105,7 +107,16 @@ class PAD:
         self.enemy = enemy
         # The observation space for this environment.
         # TODO: Fill this in.
-        self.observation_space = None
+        # Dimensions: (row, col, 0) => orb, (row, col, 1) => finger bit map
+        low = np.full((self.dim_row, self.dim_col, 2), -1)
+        low[:, :, 1] = 0
+        high=np.full((self.dim_row, self.dim_col, 2), 9)
+        high[:, :, 1] = 1
+        self.observation_space = gym.spaces.Box(
+            low=low,
+            high=high,
+            dtype=np.int8
+        )
         # Coloring scheme and letter scheme for simple "rendering" in the terminal.
         self.render_dict = parameters.default_render_dict
 
@@ -121,8 +132,9 @@ class PAD:
         # List of floats.
         self.rewards = []
         # The action space for this environment.
-        self.action_space = player.PlayerAction(
-            finger=self.finger, dim_row=self.dim_row, dim_col=self.dim_col)
+        # self.action_space = player.PlayerAction(
+            # finger=self.finger, dim_row=self.dim_row, dim_col=self.dim_col)
+        self.action_space = gym.spaces.Discrete(4)
 
         # Initialize game state.
         self.reset(board=board, finger=finger)
@@ -337,8 +349,10 @@ class PAD:
         return self.state()
 
     def state(self):
-        # TODO: Need to fill in this function properly.
-        return self.boards[-1], self.fingers[-1]
+        state_arr = np.zeros((self.dim_row, self.dim_col, 2), dtype=np.int8)
+        state_arr[:, :, 0] = self.board
+        state_arr[self.finger[0], self.finger[1], 1] = 1
+        return state_arr
 
     def step(self, action: Literal["left", "right", "up", "down"], verbose=False):
         """
@@ -353,7 +367,7 @@ class PAD:
         self.action_space.finger = self.finger
 
         # If the agent decides to stop moving the finger.
-        if action is 'pass':
+        if action == 'pass':
             reward = self.calculate_reward(
                 board=self.board, skyfall_damage=self.skyfall_damage, verbose=verbose)
         else:
@@ -369,7 +383,7 @@ class PAD:
                                  'Finger = {}, action = {}'.format(self.finger, action))
 
         # Save current state to the record.
-        if action is not 'pass':
+        if action != 'pass':
             self.observations.append(
                 (np.copy(self.board), np.copy(self.finger)))
             self.boards.append(self.observations[-1][0])
