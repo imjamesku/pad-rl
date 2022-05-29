@@ -22,7 +22,7 @@ import numpy as np
 import random
 
 import ppad.pad.parameters as parameters
-import ppad.pad.player as player
+# import ppad.pad.player as player
 import ppad.pad.utils as pad_utils
 
 import gym
@@ -133,7 +133,8 @@ class PAD(gym.Env):
         self.rewards = []
         # The action space for this environment.
         # self.action_space = player.PlayerAction(
-            # finger=self.finger, dim_row=self.dim_row, dim_col=self.dim_col)
+        #     finger=self.finger, dim_row=self.dim_row, dim_col=self.dim_col)
+        self.action_mapping = ['up', 'down', 'left', 'right', 'pass']
         self.action_space = gym.spaces.Discrete(4)
 
         # Initialize game state.
@@ -322,7 +323,7 @@ class PAD(gym.Env):
         self.fingers = []
         self.actions = []
         self.rewards = []
-        self.action_space.previous_action = 'pass'
+        # self.action_space.previous_action = 'pass'
 
         # Reset game state.
         random.seed(datetime.now())
@@ -354,7 +355,7 @@ class PAD(gym.Env):
         state_arr[self.finger[0], self.finger[1], 1] = 1
         return state_arr
 
-    def step(self, action: Literal["left", "right", "up", "down"], verbose=False):
+    def step(self, action_id: Literal[0, 1, 2, 3, 4], verbose=False):
         """
         Step function comply to OpenAI Gym standard.
         :param action: The action to take in this step.
@@ -364,9 +365,10 @@ class PAD(gym.Env):
         # We don't give intermediate rewords.
         reward = 0
         # Make sure the PlayerAction finger position is up to date.
-        self.action_space.finger = self.finger
+        # self.action_space.finger = self.finger
 
         # If the agent decides to stop moving the finger.
+        action = self.action_mapping[action_id]
         if action == 'pass':
             reward = self.calculate_reward(
                 board=self.board, skyfall_damage=self.skyfall_damage, verbose=verbose)
@@ -377,7 +379,7 @@ class PAD(gym.Env):
                     print('Action: {0}. Board after orb move:'.format(action))
                     self.render()
 
-                self.action_space.previous_action = action
+                # self.action_space.previous_action = action
             else:
                 raise ValueError('Invalid move, you cannot move off the board!\n'
                                  'Finger = {}, action = {}'.format(self.finger, action))
@@ -390,6 +392,9 @@ class PAD(gym.Env):
             self.fingers.append(self.observations[-1][1])
         self.actions.append(action)
         self.rewards.append(reward)
+        
+        done = action == 'pass' or len(self.actions) >= 60
+        return self.state(), reward, done, {}
 
     def calculate_reward(self, board=None, skyfall_damage=True, verbose=False):
         # Make a copy of the board.
@@ -451,10 +456,10 @@ class PAD(gym.Env):
 
         self.board = np.copy(self.boards[-1])
         self.finger = np.copy(self.fingers[-1])
-        if len(self.actions) > 0:
-            self.action_space.previous_action = self.actions[-1]
-        else:
-            self.action_space.previous_action = 'pass'
+        # if len(self.actions) > 0:
+        #     self.action_space.previous_action = self.actions[-1]
+        # else:
+        #     self.action_space.previous_action = 'pass'
 
     def swap(self, x1, y1, x2, y2, move_finger):
         """
