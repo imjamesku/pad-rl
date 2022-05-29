@@ -135,7 +135,7 @@ class PAD(gym.Env):
         # self.action_space = player.PlayerAction(
         #     finger=self.finger, dim_row=self.dim_row, dim_col=self.dim_col)
         self.action_mapping = ['up', 'down', 'left', 'right', 'pass']
-        self.action_space = gym.spaces.Discrete(4)
+        self.action_space = gym.spaces.Discrete(5)
 
         # Initialize game state.
         self.reset(board=board, finger=finger)
