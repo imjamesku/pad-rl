@@ -355,7 +355,7 @@ class PAD(gym.Env):
         state_arr[self.finger[0], self.finger[1], 1] = 1
         return state_arr
 
-    def step(self, action_id: Literal[0, 1, 2, 3, 4], verbose=False):
+    def step(self, action: Literal[0, 1, 2, 3, 4], verbose=False):
         """
         Step function comply to OpenAI Gym standard.
         :param action: The action to take in this step.
@@ -368,32 +368,35 @@ class PAD(gym.Env):
         # self.action_space.finger = self.finger
 
         # If the agent decides to stop moving the finger.
-        action = self.action_mapping[action_id]
-        if action == 'pass':
+        action_name = self.action_mapping[action]
+        if action_name == 'pass':
             reward = self.calculate_reward(
                 board=self.board, skyfall_damage=self.skyfall_damage, verbose=verbose)
         else:
-            comment = self.apply_action(action)
+            comment = self.apply_action(action_name)
             if comment == 'accepted':
-                if verbose is True:
-                    print('Action: {0}. Board after orb move:'.format(action))
+                if verbose == True:
+                    print('Action: {0}. Board after orb move:'.format(action_name))
                     self.render()
 
                 # self.action_space.previous_action = action
             else:
-                raise ValueError('Invalid move, you cannot move off the board!\n'
-                                 'Finger = {}, action = {}'.format(self.finger, action))
+                if verbose == True:
+                    print('Invalid move, you cannot move off the board!\n'
+                                 'Finger = {}, action = {}'.format(self.finger, action_name))
+                # raise ValueError('Invalid move, you cannot move off the board!\n'
+                                #  'Finger = {}, action = {}'.format(self.finger, action))
 
         # Save current state to the record.
-        if action != 'pass':
+        if action_name != 'pass':
             self.observations.append(
                 (np.copy(self.board), np.copy(self.finger)))
             self.boards.append(self.observations[-1][0])
             self.fingers.append(self.observations[-1][1])
-        self.actions.append(action)
+        self.actions.append(action_name)
         self.rewards.append(reward)
         
-        done = action == 'pass' or len(self.actions) >= 60
+        done = action_name == 'pass' or len(self.actions) >= 60
         return self.state(), reward, done, {}
 
     def calculate_reward(self, board=None, skyfall_damage=True, verbose=False):
