@@ -370,8 +370,9 @@ class PAD(gym.Env):
         # If the agent decides to stop moving the finger.
         action_name = self.action_mapping[action]
         if action_name == 'pass':
-            reward = self.calculate_reward(
-                board=self.board, skyfall_damage=self.skyfall_damage, verbose=verbose)
+            pass
+            # reward = self.calculate_reward(
+                # board=self.board, skyfall_damage=self.skyfall_damage, verbose=verbose)
         else:
             comment = self.apply_action(action_name)
             if comment == 'accepted':
