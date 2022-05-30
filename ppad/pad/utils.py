@@ -173,7 +173,9 @@ def single_episode2gif(observations, actions, path, shrink=3, animate=True):
     info_bar = 40
     # Font for the texts in the info bar.
     # info_font = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 40)
-    info_font = ImageFont.truetype('../fonts/Arial-Unicode.ttf', 30)
+    # info_font = ImageFont.truetype('../fonts/Arial-Unicode.ttf', 30)
+    root_path = os.environ['PPADPATH']
+    info_font = ImageFont.truetype(f'{root_path}/ppad/fonts/Arial-Unicode.ttf', 30)
     # A list to store the per frame images before the final concatenation into a GIF.
     all_frames = []
 
