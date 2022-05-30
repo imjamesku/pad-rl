@@ -23,8 +23,8 @@ class ComboRewardEnv(gym.Env):
         return obs, reward, done, info
     def reset(self):
         return self.game.reset()
-    def render(self, mode='human'):
-        self.game.render()
+    def render(self, board):
+        self.game.render(board)
 
     def visualize(self, filename, shrink=3, animate=True):
         self.game.visualize(filename)
@@ -39,11 +39,13 @@ class ComboRewardEnv(gym.Env):
             if verbose == True:
                 print('Board before combo canceling:')
                 self.render(board)
+                print(board)
 
             combos = pad_utils.cancel(board)
             if verbose == True:
                 print('Board after combo canceling:')
                 self.render(board)
+                print(board)
 
             # Break out of the loop if nothing can be canceled.
             if len(combos) < 1:
