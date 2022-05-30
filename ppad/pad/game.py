@@ -276,9 +276,20 @@ class PAD(gym.Env):
         if board is None:
             board = self.board
 
-        for orb in np.nditer(board, op_flags=['readwrite']):
-            if orb == -1 or reset is True:
-                orb[...] = self.random_orb(self.skyfall)
+        def generate_random_orb(i: int, j: int):
+            return self.random_orb(self.skyfall)
+
+        generate_random_board = np.vectorize(generate_random_orb, otypes=[int])
+        random_board = np.fromfunction(function=generate_random_board,shape=(5, 6))
+
+        if reset == True:
+            board[:] = random_board[:]
+        else:
+            board[board == -1] = self.random_orb(self.skyfall)
+
+        # for orb in np.nditer(board, op_flags=['readwrite']):
+        #     if orb == -1 or reset is True:
+        #         orb[...] = self.random_orb(self.skyfall)
         return board
 
         # TODO: In the future, enhanced and locked arrays should also be updated here.
