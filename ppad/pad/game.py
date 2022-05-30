@@ -108,10 +108,8 @@ class PAD(gym.Env):
         # The observation space for this environment.
         # TODO: Fill this in.
         # Dimensions: (row, col, 0) => orb, (row, col, 1) => finger bit map
-        low = np.full((self.dim_row, self.dim_col, 2), -1)
-        low[:, :, 1] = 0
-        high=np.full((self.dim_row, self.dim_col, 2), 9)
-        high[:, :, 1] = 1
+        low = np.full((self.dim_row, self.dim_col, len(skyfall) + 1), 0)
+        high=np.full((self.dim_row, self.dim_col, len(skyfall) + 1), 1)
         self.observation_space = gym.spaces.Box(
             low=low,
             high=high,
@@ -285,7 +283,7 @@ class PAD(gym.Env):
         if reset == True:
             board[:] = random_board[:]
         else:
-            board[board == -1] = self.random_orb(self.skyfall)
+            board[board == -1] = random_board[board == -1]
 
         # for orb in np.nditer(board, op_flags=['readwrite']):
         #     if orb == -1 or reset is True:
@@ -361,9 +359,12 @@ class PAD(gym.Env):
         return self.state()
 
     def state(self):
-        state_arr = np.zeros((self.dim_row, self.dim_col, 2), dtype=np.int8)
-        state_arr[:, :, 0] = self.board
-        state_arr[self.finger[0], self.finger[1], 1] = 1
+        orb_types = len(self.skyfall)
+        state_arr = np.zeros((self.dim_row, self.dim_col, orb_types + 1), dtype=np.int8) # + 1 for finger position
+        for i in range(orb_types): # -1 to exclude finger dimension
+            state_arr[:, :, i][self.board == i] = 1
+            
+        state_arr[self.finger[0], self.finger[1], orb_types] = 1
         return state_arr
 
     def step(self, action: Literal[0, 1, 2, 3, 4], verbose=False):
