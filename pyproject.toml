@@ -4,11 +4,15 @@ version = "0.1.0"
 description = ""
 authors = ["James Ku <jameskutw@gmail.com>"]
 
+packages = [{ include = "ppad" }, { include = "agents" }]
+
 [tool.poetry.dependencies]
 python = "^3.9"
 numpy = "^1.22.4"
 Pillow = "^9.1.1"
 stable-baselines3 = "^1.5.0"
+tensorboard = "^2.9.0"
+protobuf = "~=3.19.0"
 
 [tool.poetry.dev-dependencies]
 
