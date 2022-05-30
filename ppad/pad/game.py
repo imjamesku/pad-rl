@@ -133,6 +133,12 @@ class PAD(gym.Env):
         # self.action_space = player.PlayerAction(
         #     finger=self.finger, dim_row=self.dim_row, dim_col=self.dim_col)
         self.action_mapping = ['up', 'down', 'left', 'right', 'pass']
+        self.opposite_action = {
+            'up': 'down',
+            'down': 'up',
+            'left': 'right',
+            'right': 'left'
+        }
         self.action_space = gym.spaces.Discrete(5)
 
         # Initialize game state.
@@ -376,6 +382,8 @@ class PAD(gym.Env):
         """
         # We don't give intermediate rewords.
         reward = 0
+        is_invalid_move = False
+        did_go_back = False
         # Make sure the PlayerAction finger position is up to date.
         # self.action_space.finger = self.finger
 
@@ -388,12 +396,15 @@ class PAD(gym.Env):
         else:
             comment = self.apply_action(action_name)
             if comment == 'accepted':
+                if len(self.actions) > 0 and self.opposite_action[action_name] == self.actions[-1]:
+                    did_go_back = True
                 if verbose == True:
                     print('Action: {0}. Board after orb move:'.format(action_name))
                     self.render()
 
                 # self.action_space.previous_action = action
             else:
+                is_invalid_move = True
                 if verbose == True:
                     print('Invalid move, you cannot move off the board!\n'
                                  'Finger = {}, action = {}'.format(self.finger, action_name))
@@ -410,7 +421,7 @@ class PAD(gym.Env):
         self.rewards.append(reward)
         
         done = action_name == 'pass' or len(self.actions) >= 60
-        return self.state(), reward, done, {}
+        return self.state(), reward, done, {"is_invalid_move": is_invalid_move, "did_go_back": did_go_back}
 
     def calculate_reward(self, board=None, skyfall_damage=True, verbose=False):
         # Make a copy of the board.

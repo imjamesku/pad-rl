@@ -16,10 +16,12 @@ class ComboRewardEnv(gym.Env):
 
     def step(self, action):
         obs, reward, done, info = self.game.step(action)
+        reword = 0
+        if self.game.action_mapping[action] != 'pass':
+            if info['is_invalid_move'] == True or info['did_go_back'] == True:
+                reward -= 10
         if done:
-            reward = self.calculate_reward(self.game.board)
-        else:
-            reward = 0
+            reward += self.calculate_reward(self.game.board)
         return obs, reward, done, info
     def reset(self):
         return self.game.reset()
