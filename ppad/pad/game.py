@@ -94,13 +94,13 @@ class PAD(gym.Env):
         # All player and enemy buffs and debuffs. This should be a list of some sort.
         self.buff = buff
         # The orb identities of the board. See fill_board() for details.
-        self.board = -1 * np.ones((self.dim_row, self.dim_col), dtype=int)
+        self.board = -1 * np.ones((self.dim_row, self.dim_col), dtype=np.int8)
         # 0 means not locked, 1 means locked.
-        self.locked = np.zeros((self.dim_row, self.dim_col), dtype=int)
+        self.locked = np.zeros((self.dim_row, self.dim_col), dtype=np.int8)
         # 0 means not enhanced, 1 means enhanced.
-        self.enhanced = np.zeros((self.dim_row, self.dim_col), dtype=int)
+        self.enhanced = np.zeros((self.dim_row, self.dim_col), dtype=np.int8)
         # Finger numpy array.
-        self.finger = np.zeros(2, dtype=int)
+        self.finger = np.zeros(2, dtype=np.int8)
         # Information about player's team.
         self.team = team
         # Information about the enemy or enemies.
@@ -283,8 +283,8 @@ class PAD(gym.Env):
         def generate_random_orb(i: int, j: int):
             return self.random_orb(self.skyfall)
 
-        generate_random_board = np.vectorize(generate_random_orb, otypes=[int])
-        random_board = np.fromfunction(function=generate_random_board,shape=(5, 6))
+        generate_random_board = np.vectorize(generate_random_orb, otypes=[np.int8])
+        random_board = np.fromfunction(function=generate_random_board,shape=(5, 6), dtype=np.int8)
 
         if reset == True:
             board[:] = random_board[:]

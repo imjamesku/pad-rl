@@ -17,13 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 """
 
 import numpy as np
+from numpy.typing import NDArray
 import os
 from PIL import Image, ImageDraw, ImageFont
 
 import ppad.pad.parameters as parameters
 
 
-def cancel(board):
+def cancel(board: NDArray[np.int8]):
     """
     Cancel all 3+ connected orbs and generate combos.
     :param board: The board for combo cancellation.
