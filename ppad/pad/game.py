@@ -391,7 +391,7 @@ class PAD(gym.Env):
         action_name = self.action_mapping[action]
         if action_name == 'pass':
             pass
-            # reward = self.calculate_reward(
+            # reward = self.calculate_reward( # Skip calculate reward here
                 # board=self.board, skyfall_damage=self.skyfall_damage, verbose=verbose)
         else:
             comment = self.apply_action(action_name)
