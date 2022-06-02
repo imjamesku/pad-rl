@@ -27,7 +27,7 @@ NUM_COL = 6
 
 def find_best_path(board: NDArray[np.int8], finger_position: tuple[int, int], depth: int):
     result = dfs(board, finger_position, 'none', depth)
-    print(result)
+    return result
 
 
 def move_finger(finger_position: tuple[int, int], step: Literal['up, down', 'left', 'right']):
@@ -78,14 +78,16 @@ def dfs(board: NDArray[np.int8], finger_position: tuple[int, int], prev_action: 
 def swap(board: NDArray[np.int8], finger: tuple[int, int], next_finger: tuple[int, int]):
     board[finger[0], finger[1]], board[next_finger[0], next_finger[1]] = board[next_finger[0], next_finger[1]], board[finger[0], finger[1]]
 
-# env.render()
-test_board = np.array([[1, 0, 5, 4, 0, 1],
- [5, 3, 1, 0, 0, 1],
- [2, 5, 3, 0, 5, 2],
- [1, 1, 5, 3, 2, 4],
- [4, 0, 1, 3, 4, 2]])
-print(env.board)
-start = time.time()
+if __name__ == "__main__":
+    env.render()
+    test_board = np.array([[1, 0, 5, 4, 0, 1],
+    [5, 3, 1, 0, 0, 1],
+    [2, 5, 3, 0, 5, 2],
+    [1, 1, 5, 3, 2, 4],
+    [4, 0, 1, 3, 4, 2]])
+    print(env.board)
+    start = time.time()
 
-find_best_path(test_board, (0, 2), 8)
-print('execution time: ', time.time() - start)
+    combos, path = find_best_path(test_board, (0, 2), 6)
+    print('combos: ', combos)
+    print('execution time: ', time.time() - start)
