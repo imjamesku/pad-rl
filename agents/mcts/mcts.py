@@ -55,7 +55,9 @@ def update_tree(root: TreeNode, board: NDArray[np.int8], prev_action: Literal['l
             return child.terminal_value
         
         # move finger
+        # print(root.children)
         next_finger_position, is_valid_action = move_finger(finger_position, max_action)
+        # print(finger_position, max_action)
         assert is_valid_action, "Should always be valid"
         # swap orbs
         swap(board, finger_position, next_finger_position)
@@ -107,7 +109,7 @@ def select_action(root: TreeNode):
     max_action = None
     for action in root.children:
         child: TreeNode = root.children[action]
-        uct = calc_uct(child.total_value, child.hits, root.hits)
+        uct = calc_uct(child.total_value, child.hits, root.hits, C=2)
         if uct > max_uct:
             max_uct = uct
             max_action = action
@@ -152,12 +154,37 @@ def pick_best_action(root: TreeNode):
             max_action = action
     return max_action
 
+def find_best_path_mcts(board: NDArray[np.int8], finger_position: tuple[int, int], path_len: int, simulations_per_step: int):
+    board_copy = np.copy(board)
+    root = TreeNode()
+    prev_action = None
+    path = []
+    for i in range(path_len):
+        for j in range(simulations_per_step):
+            update_tree(root, board_copy, prev_action, finger_position)
+        action = pick_best_action(root)
+        path.append(action)
+        if (action == 'pass'):
+            break
+        next_finger_position, is_valid_action = move_finger(finger_position, action) 
+        print(f'finger: {finger_position}, move: {action}')
+        swap(board_copy, finger_position, next_finger_position)
+        finger_position = next_finger_position
+        root = root.children[action]
+    return path
+
+
 
 
 if __name__ == '__main__':
     env = PAD()
-    root = TreeNode()
-    for i in range(1000):
-        update_tree(root, env.board, None, (0, 2))
-    action = pick_best_action(root)
-    print('max action: ', action)
+    path = find_best_path_mcts(env.board, env.finger, 50, 20000)
+    print(path)
+    for action in path:
+        env.step(env.action_to_num[action])
+    env.visualize(f"mcts/test.gif")
+    # root = TreeNode()
+    # for i in range(10000):
+        # update_tree(root, env.board, None, (0, 2))
+    # action = pick_best_action(root)
+    # print('max action: ', action)
