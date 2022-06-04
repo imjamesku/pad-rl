@@ -33,7 +33,7 @@ def update_tree(root: TreeNode, board: NDArray[np.int8], prev_action: Literal['l
         value = run_simulation(board, finger_position, prev_action)
         root.total_value = value
         root.hits = 1
-        expand(root, prev_action, finger_position)
+        expand(root, prev_action, finger_position, True)
         return value
     # visited, so update children and back propagate
     else:
@@ -83,8 +83,11 @@ def run_simulation(board: NDArray[np.int8], finger_position: tuple[int, int], pr
     combos = cancel_until_termination(board_copy, False)
     return len(combos)
 
-def get_valid_actions(finger_position: tuple[int, int], prev_action: Literal['up', 'down', 'left', 'right'], rows: int, cols: int):
+def get_valid_actions(finger_position: tuple[int, int], prev_action: Literal['up', 'down', 'left', 'right'], rows: int, cols: int, include_pass: bool = True):
     valid_actions = list(action_list)
+    if not include_pass:
+        valid_actions.remove('pass')
+        
     if finger_position[0] == 0:
         valid_actions.remove('up')
     elif finger_position[0] == rows - 1:
@@ -131,8 +134,8 @@ def select_action(root: TreeNode):
 #     return select_leaf_node(root.children[max_action])
 
 
-def expand(node: TreeNode, prev_action: Literal['left', 'right', 'up', 'down'], finger_position: tuple[int, int]):
-    for action in get_valid_actions(finger_position, prev_action, 5, 6):
+def expand(node: TreeNode, prev_action: Literal['left', 'right', 'up', 'down'], finger_position: tuple[int, int], can_pass: bool):
+    for action in get_valid_actions(finger_position, prev_action, 5, 6, include_pass=can_pass):
         # next_finger_position, is_valid_action = move_finger(finger_position, action)
         # if is_valid_action and OPPOSITE_ACTION[prev_action] != action:
         node.children[action] = TreeNode()
@@ -173,16 +176,44 @@ def find_best_path_mcts(board: NDArray[np.int8], finger_position: tuple[int, int
         root = root.children[action]
     return path
 
+def find_best_path_mcts2(board: NDArray[np.int8], finger_position: tuple[int, int], path_len: int, total_simulations: int):
+    """ Find the best path using MCTS. Does not move the root. Just run the simulations
+
+    Args:
+        board (NDArray[np.int8]): _description_
+        finger_position (tuple[int, int]): _description_
+        path_len (int): _description_
+        total_simulations (int): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    board_copy = np.copy(board)
+    root = TreeNode()
+    prev_action = None
+    path = []
+    for j in range(total_simulations):
+        update_tree(root, board_copy, prev_action, finger_position)
+    while True:
+        action = pick_best_action(root)
+        path.append(action)
+        if (action == 'pass'):
+            break
+        root = root.children[action]
+    return path
+
 
 
 
 if __name__ == '__main__':
     env = PAD()
-    path = find_best_path_mcts(env.board, env.finger, 50, 20000)
+    path = find_best_path_mcts2(env.board, env.finger, path_len=20, total_simulations=10000)
+    # TODO: tune steps, rounds, C
     print(path)
     for action in path:
         env.step(env.action_to_num[action])
-    env.visualize(f"mcts/test.gif")
+    print('Rendering gif...')
+    env.visualize(f"mcts/no-pass.gif")
     # root = TreeNode()
     # for i in range(10000):
         # update_tree(root, env.board, None, (0, 2))
