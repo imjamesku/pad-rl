@@ -28,7 +28,7 @@ class TreeNode:
         # update_tree(root, board, prev_action, finger_position)
 
 
-def update_tree(root: TreeNode, board: NDArray[np.int8], prev_action: Literal['left', 'right', 'up', 'down', 'pass'], finger_position: tuple[int, int], min_steps: int):
+def update_tree(root: TreeNode, board: NDArray[np.int8], prev_action: Literal['left', 'right', 'up', 'down', 'pass'], finger_position: tuple[int, int], min_steps: int, C: int):
     # not visited yet
     if root.hits == 0:
         value, _ = run_simulation(board, finger_position, prev_action, min_steps=0)
@@ -40,7 +40,7 @@ def update_tree(root: TreeNode, board: NDArray[np.int8], prev_action: Literal['l
     # visited, so update children and back propagate
     else:
         # pick children based on UCT
-        max_action = select_action(root)
+        max_action = select_action(root, C)
 
         if max_action == 'pass':
             # calculate combo
@@ -62,7 +62,7 @@ def update_tree(root: TreeNode, board: NDArray[np.int8], prev_action: Literal['l
         # swap orbs
         swap(board, finger_position, next_finger_position)
         # update children
-        value = update_tree(root.children[max_action], board, max_action, next_finger_position, min_steps)
+        value = update_tree(root.children[max_action], board, max_action, next_finger_position, min_steps, C=C)
         # move finger back
         swap(board, finger_position, next_finger_position)
         # update hits & value
@@ -76,9 +76,10 @@ def run_simulation(board: NDArray[np.int8], finger_position: tuple[int, int], pr
     cur_finger_position = finger_position
     prev_action = prev_action
     path = []
+    rows, cols = board.shape[0], board.shape[1]
     while True:
         can_pass = len(path) >= min_steps
-        cur_action = random.choice(get_valid_actions(cur_finger_position, prev_action, 5, 6, include_pass=can_pass))
+        cur_action = random.choice(get_valid_actions(cur_finger_position, prev_action, rows, cols, include_pass=can_pass))
         path.append(cur_action)
         if cur_action == 'pass':
             break
@@ -115,13 +116,22 @@ def get_valid_actions(finger_position: tuple[int, int], prev_action: Literal['up
     return valid_actions
 
 
-def select_action(root: TreeNode):
+def select_action(root: TreeNode, C: int):
+    """selection action based on UCB
+
+    Args:
+        root (TreeNode): parent of children
+        C (int): UCB constant
+
+    Returns:
+        string: action that has max UCB
+    """
     assert len(root.children) > 0, "Did not expand properly"
     max_uct = 0
     max_action = None
     for action in root.children:
         child: TreeNode = root.children[action]
-        uct = calc_uct(child.total_value, child.hits, root.hits, C=2)
+        uct = calc_uct(child.total_value, child.hits, root.hits, C=C)
         if uct > max_uct:
             max_uct = uct
             max_action = action
@@ -187,7 +197,7 @@ def find_best_path_mcts(board: NDArray[np.int8], finger_position: tuple[int, int
         root = root.children[action]
     return path
 
-def find_best_path_mcts2(board: NDArray[np.int8], finger_position: tuple[int, int], min_path_len: int, total_simulations: int):
+def find_best_path_mcts2(board: NDArray[np.int8], finger_position: tuple[int, int], min_path_len: int, total_simulations: int, C: int):
     """ Find the best path using MCTS. Does not move the root. Just run the simulations
 
     Args:
@@ -204,7 +214,7 @@ def find_best_path_mcts2(board: NDArray[np.int8], finger_position: tuple[int, in
     prev_action = None
     path = []
     for j in range(total_simulations):
-        update_tree(root, board_copy, prev_action, finger_position, min_steps=min_path_len)
+        update_tree(root, board_copy, prev_action, finger_position, min_steps=min_path_len, C=C)
     while True:
         action = pick_best_action(root)
         path.append(action)
