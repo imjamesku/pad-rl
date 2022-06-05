@@ -211,28 +211,33 @@ def find_best_path_mcts2(board: NDArray[np.int8], finger_position: tuple[int, in
     """ Find the best path using MCTS. Does not move the root. Just run the simulations
 
     Args:
-        board (NDArray[np.int8]): _description_
-        finger_position (tuple[int, int]): _description_
-        path_len (int): _description_
-        total_simulations (int): _description_
+        board (NDArray[np.int8]): pad board state
+        finger_position (tuple[int, int]): position of finger
+        min_path_len (int): minimum length of path
+        total_simulations (int): Total number of simulations to run. (How many times to update the tree)
 
     Returns:
-        _type_: _description_
+        path: The best path found by mcts
+        child_not_explored: True if a leaf is reached in the tree. (Probably need more simulations to expand)
     """
     board_copy = np.copy(board)
     root = TreeNode()
     prev_action = None
     path = []
+    child_not_explored = False
     for j in range(total_simulations):
         update_tree(root, board_copy, prev_action,
                     finger_position, min_steps=min_path_len, C=C)
     while True:
         action = pick_best_action(root)
+        if action is None:
+            action = 'pass'
+            child_not_explored = True
         path.append(action)
         if (action == 'pass'):
             break
         root = root.children[action]
-    return path
+    return path, child_not_explored
 
 
 if __name__ == '__main__':
@@ -240,7 +245,6 @@ if __name__ == '__main__':
     print(env.board.tolist())
     path = find_best_path_mcts2(
         env.board, env.finger, min_path_len=50, total_simulations=20000)
-    # TODO: Add max combo termination
     # TODO: Unit tests
     # TODO: tune steps, rounds, C
     print(path)
