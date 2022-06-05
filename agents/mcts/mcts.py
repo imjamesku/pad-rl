@@ -31,7 +31,7 @@ class TreeNode:
 def update_tree(root: TreeNode, board: NDArray[np.int8], prev_action: Literal['left', 'right', 'up', 'down', 'pass'], finger_position: tuple[int, int], min_steps: int):
     # not visited yet
     if root.hits == 0:
-        value = run_simulation(board, finger_position, prev_action)
+        value, _ = run_simulation(board, finger_position, prev_action)
         root.total_value = value
         root.hits = 1
         can_pass = root.steps_taken >= min_steps
@@ -57,9 +57,7 @@ def update_tree(root: TreeNode, board: NDArray[np.int8], prev_action: Literal['l
             return child.terminal_value
         
         # move finger
-        # print(root.children)
         next_finger_position, is_valid_action = move_finger(finger_position, max_action)
-        # print(finger_position, max_action)
         assert is_valid_action, "Should always be valid"
         # swap orbs
         swap(board, finger_position, next_finger_position)
@@ -74,16 +72,24 @@ def update_tree(root: TreeNode, board: NDArray[np.int8], prev_action: Literal['l
 
 def run_simulation(board: NDArray[np.int8], finger_position: tuple[int, int], prev_action: Literal['up', 'down', 'left', 'right']):
     board_copy = np.copy(board)
-    action = None
+    cur_action = None
+    cur_finger_position = finger_position
+    prev_action = prev_action
+    path = []
     while True:
-        action = random.choice(get_valid_actions(finger_position, prev_action, 5, 6))
-        if action == 'pass':
+        cur_action = random.choice(get_valid_actions(cur_finger_position, prev_action, 5, 6))
+        path.append(cur_action)
+        if cur_action == 'pass':
             break
-        next_finger_position, is_valid_action = move_finger(finger_position, action)
-        swap(board_copy, finger_position, next_finger_position)
+        next_finger_position, is_valid_action = move_finger(cur_finger_position, cur_action)
+        
+        swap(board_copy, cur_finger_position, next_finger_position)
+        prev_action = cur_action
+        cur_finger_position = next_finger_position
+        
 
     combos = cancel_until_termination(board_copy, False)
-    return len(combos)
+    return len(combos), path
 
 def get_valid_actions(finger_position: tuple[int, int], prev_action: Literal['up', 'down', 'left', 'right'], rows: int, cols: int, include_pass: bool = True):
     valid_actions = list(action_list)
@@ -157,7 +163,7 @@ def pick_best_action(root: TreeNode):
         child: TreeNode = root.children[action]
         mean_value = child.total_value / child.hits
         if mean_value > max_mean_value:
-            max_mean_value = mean_value
+            max_mean_value = mean_value #TODO: Fix division by 0
             max_action = action
     return max_action
 
@@ -211,7 +217,7 @@ def find_best_path_mcts2(board: NDArray[np.int8], finger_position: tuple[int, in
 
 if __name__ == '__main__':
     env = PAD()
-    path = find_best_path_mcts2(env.board, env.finger, min_path_len=40, total_simulations=30000)
+    path = find_best_path_mcts2(env.board, env.finger, min_path_len=50, total_simulations=10000)
     # TODO: tune steps, rounds, C
     print(path)
     for action in path:
