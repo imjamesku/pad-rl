@@ -218,6 +218,8 @@ def find_best_path_mcts2(board: NDArray[np.int8], finger_position: tuple[int, in
 if __name__ == '__main__':
     env = PAD()
     path = find_best_path_mcts2(env.board, env.finger, min_path_len=50, total_simulations=10000)
+    # TODO: Add max combo termination
+    # TODO: Unit tests
     # TODO: tune steps, rounds, C
     print(path)
     for action in path:
